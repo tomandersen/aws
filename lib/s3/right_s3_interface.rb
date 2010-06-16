@@ -880,13 +880,24 @@ module Aws
         rescue
             on_exception
         end
-
+        
+        # Encodes key for inclusion in URLs, etc.
+        #
+        #  self.encodeKey('s3 key with on/a/path with arbitrary unicode chars, such as this?<>!(or this)') #=> encoded string suitable for framing
+        #
+        def self.encodeKey(key)
+          # EG: CGI escape is str.gsub(/[^a-zA-Z0-9_\-.]/n){ sprintf("%%%02X", $&.unpack("C")[0]) }, but we can leave in / and some others for easier reading
+          # esacpe all characters except a-Z, 0-9, and - _ . ! ~ *'  ( )  / 
+          key.gsub(/[^a-zA-Z0-9\-_.!~*'()\/]/n){ sprintf("%%%02X", $&.unpack("C")[0]) }
+        end
+        
+        
         # Generates link for 'PutObject'.
         #
         #  s3.put_link('my_awesome_bucket',key, object) #=> url string
         #
         def put_link(bucket, key, data=nil, expires=nil, headers={})
-            generate_link('PUT', headers.merge(:url=>"#{bucket}/#{AwsUtils::URLencode key}", :data=>data), expires)
+            generate_link('PUT', headers.merge(:url=>"#{bucket}/#{S3Interface::encodeKey key}", :data=>data), expires)
         rescue
             on_exception
         end
@@ -904,7 +915,7 @@ module Aws
         #
         # see http://docs.amazonwebservices.com/AmazonS3/2006-03-01/VirtualHosting.html
         def get_link(bucket, key, expires=nil, headers={})
-            generate_link('GET', headers.merge(:url=>"#{bucket}/#{AwsUtils::URLencode key}"), expires)
+            generate_link('GET', headers.merge(:url=>"#{bucket}/#{S3Interface::encodeKey key}"), expires)
         rescue
             on_exception
         end
@@ -914,7 +925,7 @@ module Aws
         #  s3.head_link('my_awesome_bucket',key) #=> url string
         #
         def head_link(bucket, key, expires=nil, headers={})
-            generate_link('HEAD', headers.merge(:url=>"#{bucket}/#{AwsUtils::URLencode key}"), expires)
+            generate_link('HEAD', headers.merge(:url=>"#{bucket}/#{S3Interface::encodeKey key}"), expires)
         rescue
             on_exception
         end
@@ -924,7 +935,7 @@ module Aws
         #  s3.delete_link('my_awesome_bucket',key) #=> url string
         #
         def delete_link(bucket, key, expires=nil, headers={})
-            generate_link('DELETE', headers.merge(:url=>"#{bucket}/#{AwsUtils::URLencode key}"), expires)
+            generate_link('DELETE', headers.merge(:url=>"#{bucket}/#{S3Interface::encodeKey key}"), expires)
         rescue
             on_exception
         end
@@ -935,7 +946,7 @@ module Aws
         #  s3.get_acl_link('my_awesome_bucket',key) #=> url string
         #
         def get_acl_link(bucket, key='', headers={})
-            return generate_link('GET', headers.merge(:url=>"#{bucket}/#{AwsUtils::URLencode key}?acl"))
+            return generate_link('GET', headers.merge(:url=>"#{bucket}/#{S3Interface::encodeKey key}?acl"))
         rescue
             on_exception
         end
@@ -945,7 +956,7 @@ module Aws
         #  s3.put_acl_link('my_awesome_bucket',key) #=> url string
         #
         def put_acl_link(bucket, key='', headers={})
-            return generate_link('PUT', headers.merge(:url=>"#{bucket}/#{AwsUtils::URLencode key}?acl"))
+            return generate_link('PUT', headers.merge(:url=>"#{bucket}/#{S3Interface::encodeKey key}?acl"))
         rescue
             on_exception
         end

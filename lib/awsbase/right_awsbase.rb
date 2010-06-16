@@ -210,6 +210,7 @@ module Aws
         # CGI::escape will escape characters in the protocol, host, and port
         # sections of the URI.  Only target chars in the query
         # string should be escaped.
+        # at the present time this is only called from SQS, so perhaps should be moved there and made to follow the SQS documentation explicitely
         def self.URLencode(raw)
             e = URI.escape(raw)
             e.gsub(/\+/, "%2b")
